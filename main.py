@@ -1,17 +1,54 @@
+import os
+from tkinter import Image, Label
+from dotenv import load_dotenv
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.core.window import Window
+from kivy.uix.label import Label
+from  kivy.uix.image import Image
+import requests
+
+load_dotenv()
 
 Window.size = (300,500) #WIDTH, HEIGHT
  
 class Calculator(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(orientation="vertical", **kwargs)
+        
+        # OPEN WEATHER API        
+        API_KEY = os.getenv('API_KEY')
+        CITY = "Adelaide"
+        URL = f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric"
+        response = requests.get(URL)
+        if response.status_code == 200:
+            data = response.json()
+            temperature = data["main"]["temp"]
+            description = data["weather"][0]["description"]
+            humidity = data["main"]["humidity"]
+            
+            print(f"Weather in {CITY}:")
+            print(f"Temperature: {temperature}°C")
+            print(f"Description: {description}")
+            print(f"Humidity: {humidity}%")
+        else:
+            print("Failed to retrieve weather data:", response.status_code)
 
-        # BUILD OUT APP HERE
+        # BOX LAYOUT WITH IMAGE & LABEL FOR WEATHER
+        weather_layout = BoxLayout(orientation='horizontal', spacing=50, size_hint_y=0.05)
+        weather_label = Label(
+            text=f"{CITY} {round(data['main']['temp'],0)}°C {data['weather'][0]['description']}",
+            size_hint=(0.7,1)
+        )
+        weather_icon = Image(
+            source='mobile-kivy\\imgs\\CMV TRUCK.png', 
+            size_hint=(0.3,1)
+        )
+        weather_layout.add_widget(weather_icon) 
+        weather_layout.add_widget(weather_label)
 
         # CREATE TEXT INPUT
         self.result = TextInput(
@@ -25,6 +62,7 @@ class Calculator(BoxLayout):
         )
 
         # ADD WIDGET TO BOXLAYOUT INHERITED IN CLASS
+        self.add_widget(weather_layout)
         self.add_widget(self.result)
 
         # CREATE BUTTONS
